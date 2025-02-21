@@ -1,23 +1,30 @@
-name: Node.js CI
+image: node:14
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+pipelines:
+  default:
+    - step:
+        name: Install Dependencies
+        caches:
+          - node
+        script:
+          - npm install
 
-jobs:
-  build:
+  branches:
+    main:
+      - step:
+          name: Build and Test
+          caches:
+            - node
+          script:
+            - npm install
+            - npm test
 
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js 14
-      uses: actions/setup-node@v3
-      with:
-        node-version: 14
-        cache: 'npm'
-
-    - run: npm install
-    - run: npm test
+      - step:
+          name: Deploy to Heroku
+          deployment: production
+          script:
+            - apt-get update && apt-get install -y git
+            - git remote add heroku https://github.com/ashishsuffescom/nodejs-demo.git
+            - echo "machine api.heroku.com login _ password $HEROKU_API_KEY" > ~/.netrc
+            - echo "machine git.heroku.com login _ password $HEROKU_API_KEY" >> ~/.netrc
+            - git push heroku main
